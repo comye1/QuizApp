@@ -5,9 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,12 +19,21 @@ class MainActivity : ComponentActivity() {
             QuizAppTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
+                    var index by remember{
+                        mutableStateOf(0)
+                    }
                     val quiz1 = Quiz(
                         question = "세계에서 가장 높은 산은?",
                         answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
                         answerIndex = 0
                     )
-                    QuizSection(quiz = quiz1, onAnswerSelected = { })
+                    val quiz2 = Quiz(
+                        question = "임진왜란이 일어난 연도는?",
+                        answers = listOf("1472년", "1548년", "1592년", "1623년"),
+                        answerIndex = 2
+                    )
+                    val quizList = listOf(quiz1, quiz2)
+                    QuizSection(quiz = quizList[index], onAnswerSelected = { if(index < quizList.size - 1) index++  })
                 }
             }
         }
@@ -102,7 +109,7 @@ fun DefaultPreview() {
             answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
             answerIndex = 0
         )
-        QuizSection(quiz = quiz1, onAnswerSelected = { })
+        QuizSection(quiz = quiz1, onAnswerSelected = {})
     }
 }
 
