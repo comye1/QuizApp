@@ -22,6 +22,9 @@ class MainActivity : ComponentActivity() {
                     var index by remember{
                         mutableStateOf(0)
                     }
+                    var answerCount by remember{
+                        mutableStateOf(0)
+                    }
                     val quiz1 = Quiz(
                         question = "세계에서 가장 높은 산은?",
                         answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
@@ -33,7 +36,20 @@ class MainActivity : ComponentActivity() {
                         answerIndex = 2
                     )
                     val quizList = listOf(quiz1, quiz2)
-                    QuizSection(quiz = quizList[index], onAnswerSelected = { if(index < quizList.size - 1) index++  })
+                    if(index < quizList.size){
+                        QuizSection(
+                            quiz = quizList[index],
+                            onAnswerSelected = {
+                                index++
+                                answerCount++
+                            }
+                        )
+                    }else {
+                        Column() {
+                            Text("퀴즈 끝")
+                            Text("맞힌 문제 : ${answerCount}개")
+                        }
+                   }
                 }
             }
         }
