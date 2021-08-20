@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.quizapp.Dataset.QuizList
 import com.example.quizapp.ui.theme.QuizAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -19,24 +20,14 @@ class MainActivity : ComponentActivity() {
             QuizAppTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(color = MaterialTheme.colors.background) {
-                    var index by remember{
+                    var index by remember {
                         mutableStateOf(0)
                     }
-                    var answerCount by remember{
+                    var answerCount by remember {
                         mutableStateOf(0)
                     }
-                    val quiz1 = Quiz(
-                        question = "세계에서 가장 높은 산은?",
-                        answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
-                        answerIndex = 0
-                    )
-                    val quiz2 = Quiz(
-                        question = "임진왜란이 일어난 연도는?",
-                        answers = listOf("1472년", "1548년", "1592년", "1623년"),
-                        answerIndex = 2
-                    )
-                    val quizList = listOf(quiz1, quiz2)
-                    if(index < quizList.size){
+                    val quizList = QuizList
+                    if (index < quizList.size) {
                         QuizSection(
                             quiz = quizList[index],
                             onAnswerSelected = {
@@ -44,12 +35,12 @@ class MainActivity : ComponentActivity() {
                                 answerCount++
                             }
                         )
-                    }else {
+                    } else {
                         Column() {
                             Text("퀴즈 끝")
                             Text("맞힌 문제 : ${answerCount}개")
                         }
-                   }
+                    }
                 }
             }
         }
@@ -135,3 +126,27 @@ class Quiz(
     val answerIndex: Int
 )
 
+object Dataset {
+    val QuizList = listOf(
+        Quiz(
+            question = "세계에서 가장 높은 산은?",
+            answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
+            answerIndex = 0
+        ),
+        Quiz(
+            question = "임진왜란이 일어난 연도는?",
+            answers = listOf("1472년", "1548년", "1592년", "1623년"),
+            answerIndex = 2
+        ),
+        Quiz(
+            question = "다음 중 섬나라는?",
+            answers = listOf("스페인", "이탈리아", "독일", "영국"),
+            answerIndex = 3
+        ),
+        Quiz(
+            question = "다음 중 가장 무거운 행성은?",
+            answers = listOf("수성", "금성", "지구", "화성"),
+            answerIndex = 2
+        )
+    )
+}
