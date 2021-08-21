@@ -3,13 +3,26 @@ package com.example.quizapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.quizapp.Dataset.QuizList
 import com.example.quizapp.ui.theme.QuizAppTheme
 
@@ -30,16 +43,19 @@ class MainActivity : ComponentActivity() {
                     if (index < quizList.size) {
                         QuizSection(
                             quiz = quizList[index],
-                            onAnswerSelected = {
+                            onCorrectAnswer = {
                                 index++
                                 answerCount++
+                            },
+                            onIncorrectAnswer = {
+                                index++
                             }
                         )
                     } else {
-                        Column() {
-                            Text("퀴즈 끝")
-                            Text("맞힌 문제 : ${answerCount}개")
-                        }
+                        QuizEndScreen(
+                            correctCount = answerCount,
+                            totalCount = quizList.size
+                        )
                     }
                 }
             }
@@ -50,14 +66,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun QuizSection(
     quiz: Quiz,
-    onAnswerSelected: () -> Unit
+    onCorrectAnswer: () -> Unit,
+    onIncorrectAnswer: () -> Unit
 ) {
     Column {
         QuestionSection(question = quiz.question, modifier = Modifier.weight(1f))
         AnswerSection(
             answers = quiz.answers,
             answerIndex = quiz.answerIndex,
-            onAnswerSelected = onAnswerSelected,
+            onCorrectAnswer = onCorrectAnswer,
+            onInCorrectAnswer = onIncorrectAnswer,
             modifier = Modifier.weight(1f)
         )
     }
@@ -67,7 +85,8 @@ fun QuizSection(
 fun AnswerSection(
     answers: List<String>,
     answerIndex: Int,
-    onAnswerSelected: () -> Unit,
+    onCorrectAnswer: () -> Unit,
+    onInCorrectAnswer: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier.padding(10.dp)) {
@@ -76,7 +95,10 @@ fun AnswerSection(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                onClick = { if (answer == answers[answerIndex]) onAnswerSelected() },
+                onClick = {
+                    if (answer == answers[answerIndex]) onCorrectAnswer()
+                    else onInCorrectAnswer()
+                },
             ) {
                 Text(text = answer, style = MaterialTheme.typography.body1)
             }
@@ -95,7 +117,8 @@ fun QuestionSection(question: String, modifier: Modifier) {
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = question,
@@ -104,6 +127,135 @@ fun QuestionSection(question: String, modifier: Modifier) {
                 modifier = Modifier.padding(10.dp)
             )
         }
+    }
+}
+
+@Composable
+fun QuizEndScreen(
+    correctCount: Int,
+    totalCount: Int
+) {
+    Column(modifier = Modifier.padding(10.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .background(
+                    color = MaterialTheme.colors.primary.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(10.dp)
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "퀴즈 끝",
+                style = MaterialTheme.typography.h3
+            )
+        }
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            elevation = 4.dp
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "맞힌 문제 : ${correctCount}개",
+                    style = MaterialTheme.typography.h5
+                )
+            }
+        }
+        Card(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(vertical = 10.dp),
+            elevation = 4.dp
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "틀린 문제 : ${totalCount - correctCount}개",
+                    style = MaterialTheme.typography.h5
+                )
+            }
+        }
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .padding(10.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            CircularProgressBar(
+                percentage = correctCount / totalCount.toFloat(),
+                text = "${correctCount}개 / ${totalCount}개"
+            )
+
+        }
+    }
+}
+
+@Composable
+fun CircularProgressBar(
+    percentage: Float,
+    text: String,
+    fontSize: TextUnit = 28.sp,
+    radius: Dp = 100.dp,
+    color: Color = Color.Green,
+    strokeWith: Dp = 8.dp,
+    animationDuration: Int = 1000,
+    animationDelay: Int = 0
+) {
+    var animationPlayed by remember {
+        mutableStateOf(false)
+    }
+
+    /*
+    Fire-and-forget animation function for Float.
+    When the provided targetValue is changed, the animation will run automatically.
+    If there is already an animation in-flight when targetValue changes,
+    the on-going animation will adjust course to animate towards the new target value.
+    animateFloatAsState returns a State object.
+    The value of the state object will continuously be updated by the animation until the animation finishes.
+    Note, animateFloatAsState cannot be canceled/stopped without removing this composable function from the tree.
+     */
+    val curPercentage = animateFloatAsState(
+        targetValue = if (animationPlayed) percentage else 0f,
+        animationSpec = tween(
+            durationMillis = animationDuration,
+            delayMillis = animationDelay
+        )
+    )
+    LaunchedEffect(key1 = true) {
+        animationPlayed = true
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(radius * 2f)
+    ) {
+        Canvas(modifier = Modifier.size(radius * 2f)) {
+            drawArc(
+                color = color,
+                -90f,
+                360 * curPercentage.value,
+                useCenter = false,
+                style = Stroke(strokeWith.toPx(), cap = StrokeCap.Round)
+            )
+        }
+        Text(
+            text = text,
+            color = Color.Black,
+            fontSize = fontSize,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
@@ -116,7 +268,7 @@ fun DefaultPreview() {
             answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
             answerIndex = 0
         )
-        QuizSection(quiz = quiz1, onAnswerSelected = {})
+        QuizSection(quiz = quiz1, onCorrectAnswer = {}, onIncorrectAnswer = {})
     }
 }
 
@@ -127,7 +279,7 @@ class Quiz(
 )
 
 object Dataset {
-    val QuizList = listOf(
+    val QuizList = mutableListOf(
         Quiz(
             question = "세계에서 가장 높은 산은?",
             answers = listOf("에베레스트산", "백두산", "한라산", "킬리만자로산"),
@@ -149,4 +301,9 @@ object Dataset {
             answerIndex = 2
         )
     )
+
+    fun addQuiz(quiz: Quiz) {
+        QuizList.add(quiz)
+    }
+
 }
