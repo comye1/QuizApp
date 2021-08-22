@@ -208,8 +208,8 @@ fun CircularProgressBar(
     text: String,
     fontSize: TextUnit = 28.sp,
     radius: Dp = 100.dp,
-    color: Color = Color.Green,
-    strokeWith: Dp = 8.dp,
+    color: Color = MaterialTheme.colors.primary,
+    strokeWith: Dp = 20.dp,
     animationDuration: Int = 1000,
     animationDelay: Int = 0
 ) {
@@ -242,6 +242,13 @@ fun CircularProgressBar(
         modifier = Modifier.size(radius * 2f)
     ) {
         Canvas(modifier = Modifier.size(radius * 2f)) {
+            drawArc(
+                color = Color.LightGray,
+                -90f,
+                360f,
+                useCenter = false,
+                style = Stroke(strokeWith.toPx(), cap = StrokeCap.Round)
+            )
             drawArc(
                 color = color,
                 -90f,
